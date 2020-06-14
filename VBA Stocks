@@ -1,0 +1,287 @@
+Sub TickerSummary()
+
+
+Dim Tabcount As Integer
+
+'Set Tabcount as number of tabs in workbook.
+         Tabcount = ActiveWorkbook.Worksheets.Count
+
+         ' Begin the loop
+         For C = 1 To Tabcount
+         
+    Worksheets(C).Select
+
+'Scan Column A, when Ticker value changes list Ticker in column "I"
+
+'Set Variable for Ticker and Last Row
+Dim Ticker As String
+Dim TickerEntryPoint As Integer
+Dim Lastrow As Long
+
+'Find Number of Last Row
+Lastrow = Cells(Rows.Count, 1).End(xlUp).Row
+
+'MsgBox Lastrow
+
+'Set Ticker Entry Point
+ Cells(1, 9).Value = "Ticker"
+ TickerEntryPoint = 2
+ 
+ 
+
+'Loop Tickers
+
+For I = 2 To Lastrow
+
+ 'Find out If the Ticker Cell does not match the one above
+  If Cells(I, 1) <> Cells(I - 1, 1) Then
+  
+    'If it doesn't then List it in the Ticker Column
+     Ticker = Cells(I, 1)
+     Cells(TickerEntryPoint, 9) = Ticker
+     'Move The Ticker Entry point down 1
+      TickerEntryPoint = TickerEntryPoint + 1
+ 
+ 
+End If
+Next I
+
+'Calculate and Enter the yearly change
+Dim OpeningValue As Double
+Dim ClosingValue As Double
+Dim YearlyChange As Double
+Dim YCEP As Integer
+'YCEP = Yearly Change Entry Point
+Dim OVEP As Integer
+'OVEP = Opening Value Entry Point
+Dim CVEP As Integer
+'CVEP = Closing Value Entry Point
+
+'Find Number of Last Row
+Lastrow = Cells(Rows.Count, 1).End(xlUp).Row
+
+'Set YearlyChange Entry Point
+Cells(1, 10).Value = "Yearly Change"
+ YCEP = 2
+ OVEP = 2
+ CVEP = 2
+ 
+ 'Loop OVEP and Enter Opening Values
+
+For I = 2 To Lastrow
+ 
+  'Find out If the Ticker Cell does not match the one above
+  If Cells(I, 1) <> Cells(I - 1, 1) Then
+  'Set the Opening Value
+  OpeningValue = Cells(I, 3)
+  Cells(OVEP, 15).Value = OpeningValue
+  'Move The OVEP down 1
+      OVEP = OVEP + 1
+    
+    
+  End If
+
+Next I
+
+'Loop CVEP and Enter Closing Values
+
+For I = 2 To Lastrow
+ 
+  'Find out If the Ticker Cell does not match the one above
+  If Cells(I, 1) <> Cells(I + 1, 1) Then
+  'Set the Closing Value
+ ClosingValue = Cells(I, 6)
+  Cells(CVEP, 16).Value = ClosingValue
+  'Move The CVEP down 1
+      CVEP = CVEP + 1
+    
+    
+  End If
+Next I
+  
+    'Find Last Row of Ticker List
+  Dim ListLastRow As Integer
+  ListLastRow = Cells(Rows.Count, 9).End(xlUp).Row
+  'MsgBox ListLastRow
+  
+  'Loop Ticker List and Enter Yearly Change
+  For I = 2 To ListLastRow
+  Cells(I, 10).Value = Cells(I, 16).Value - Cells(I, 15).Value
+  
+  Next I
+  
+  'Lopp Through and Format Cell Colours
+  Dim Red As Integer
+  Dim Green As Integer
+  Red = 3
+  Green = 4
+  
+    'Loop Ticker List and Enter Yearly Change
+  For I = 2 To ListLastRow
+  If Cells(I, 10).Value < 0 Then
+  Cells(I, 10).Interior.ColorIndex = Red
+  Else
+  Cells(I, 10).Interior.ColorIndex = Green
+    
+  End If
+  
+  Next I
+
+'Enter Percentage Change
+'Enter Column Title
+
+Cells(1, 11).Value = "Percentage Change"
+Dim YearlyChangeNo As Double
+Dim OpenValue As Double
+Dim pc As Double
+
+'Loop Ticker List and Enter Percentage Change
+  For I = 2 To ListLastRow
+  
+  
+  YearlyChangeNo = Cells(I, 10).Value
+  OpenValue = Cells(I, 15).Value
+  
+  'Avoid Division by 0 error
+  If OpenValue = 0 Then
+  pc = "0"
+  Else
+  pc = YearlyChangeNo / OpenValue
+  
+  End If
+  
+  Cells(I, 11).Value = pc
+  Cells(I, 11).NumberFormat = "0.00%"
+
+
+Next I
+
+'Loop Through Value and add G column to a total, once the value of the tocket changes enter that total into the total volume column and keep going.
+
+Dim VolumeTotal As Double
+'****Tried to Dim as Long but kept getting Run-time Error '6': Overflow changed to double and it worked.
+VolumeTotal = 0
+Dim VECP As Integer
+VECP = 2
+'VECP = Volume Enttry Counter Point
+
+'Enter Column Title
+
+Cells(1, 12).Value = "Total Stock Volume"
+'StartLoop
+
+ 'Loop and retrive volumes
+
+For I = 2 To Lastrow
+
+ 
+  'Find out If the Ticker Cell does match the one below
+  If Cells(I, 1) = Cells(I + 1, 1) Then
+    
+    'add volume to volumetotal
+    VolumeTotal = VolumeTotal + Cells(I, 7).Value
+    
+  'If The Ticker does not match the one above, add the volume to the Total Stock Volume Column
+  
+ 
+  Else
+  
+  VolumeTotal = VolumeTotal + Cells(I, 7).Value
+  Cells(VECP, 12).Value = VolumeTotal
+  'Increase VECP by 1
+  VECP = (VECP + 1)
+  'Reset VolumeTotal
+  VolumeTotal = 0
+  
+  End If
+  
+  Next I
+    
+  'Remove value from O and P
+  
+  For I = 2 To ListLastRow
+  For j = 15 To 16
+  Cells(I, j).Value = ""
+  
+  Next j
+  
+  Next I
+  
+ 'summarize greatest % increase, Greatest % decrease and Greatest total volume.
+ 'Enter Labels
+ Cells(2, 15).Value = "Greatest % Increase"
+ Cells(3, 15).Value = "Greatest % Decrease"
+ Cells(4, 15).Value = "Greatest Total Volume"
+ 'Find the Values
+ 
+Dim GreatestInc As Double
+Dim GreatestDec As Double
+Dim GreatestTV As Double
+Dim TGI As String
+Dim TGD As String
+Dim GTV As String
+
+
+'Reset Greatest Inc
+GreatestInc = 0
+
+'Scan for Highest Value
+For I = 2 To ListLastRow
+ If Cells(I, 11) > GreatestInc Then
+ GreatestInc = Cells(I, 11).Value
+ TGI = Cells(I, 9).Value
+ 
+ 'Output the values
+Cells(2, 17).Value = GreatestInc
+Cells(2, 16).Value = TGI
+
+End If
+
+Next I
+
+'Reset Greatest Dec
+GreatestDec = 0
+
+'Scan for Highest Value
+For I = 2 To ListLastRow
+ If Cells(I, 11) < GreatestDec Then
+ GreatestDec = Cells(I, 11).Value
+ TGD = Cells(I, 9).Value
+ 
+ 'Output the values
+Cells(3, 17).Value = GreatestDec
+Cells(3, 16).Value = TGD
+
+End If
+
+Next I
+
+'Reset Greatest TV
+GreatestTV = 0
+
+'Scan for Highest Value
+For I = 2 To ListLastRow
+ If Cells(I, 12) > GreatestTV Then
+ GreatestTV = Cells(I, 12).Value
+ GTV = Cells(I, 9).Value
+ 
+ 'Output the values
+Cells(4, 17).Value = GreatestTV
+Cells(4, 16).Value = GTV
+
+
+End If
+
+Next I
+
+'Update Formatting
+Cells(2, 17).NumberFormat = "0.00%"
+Cells(3, 17).NumberFormat = "0.00%"
+  
+'Make it pretty
+Range("A1:Q1").EntireColumn.AutoFit
+
+
+Next C
+
+End Sub
